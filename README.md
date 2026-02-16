@@ -2,11 +2,13 @@
 
 Updated Amazon-style front-end demo with:
 - Main store page with search, view detail (separate page), add to cart, buy now.
-- My Orders page in store navbar for user orders + live status tracking.
-- Checkout/payment page with COD active and UPI/Net Banking shown as coming soon.
-- Full address flow with delivery instruction.
-- Separate admin page for product creation/edit/delete, stock updates, order status updates, filters, and image upload.
-- UI animations (fade/slide/pop) and hover transitions.
+- My Orders page with each ordered product shown separately.
+- "Track Package" button on each ordered product card.
+- "Request Cancellation" on each ordered product with admin approval flow.
+- Cart quantity increase/decrease, delete item, and dynamic pricing.
+- Delivery charge rule: `₹40` if subtotal `< ₹500`, otherwise free.
+- Tax always `₹0`.
+- Admin page with per-product order status updates and cancellation accept/decline with reason.
 
 ## Run
 ```bash

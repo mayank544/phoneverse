@@ -53,7 +53,12 @@
           <div class="card">
             <h3>Cart Summary</h3>
             <div id="cartItems"></div>
-            <p class="total">Total: ₹<span id="cartTotal">0</span></p>
+            <div class="price-breakdown">
+              <p>Subtotal: ₹<span id="cartSubtotal">0</span></p>
+              <p>Delivery Charge: ₹<span id="deliveryCharge">0</span></p>
+              <p>Tax: ₹<span id="taxCharge">0</span></p>
+              <p class="total">Total: ₹<span id="cartTotal">0</span></p>
+            </div>
           </div>
 
           <div class="card">
@@ -104,10 +109,15 @@
     <template id="orderCardTpl">
       <article class="card order-card pop-in">
         <h3 class="order-id"></h3>
+        <p><strong>Product:</strong> <span class="order-item"></span></p>
         <p><strong>Status:</strong> <span class="order-status badge"></span></p>
-        <p><strong>Total:</strong> ₹<span class="order-total"></span></p>
-        <p class="order-items"></p>
-        <div class="track-bar mini-track">
+        <p><strong>Qty:</strong> <span class="order-qty"></span> | <strong>Price:</strong> ₹<span class="order-price"></span></p>
+        <p class="cancel-note hidden"></p>
+        <div class="btn-group">
+          <button class="btn btn-light track-btn">Track Package</button>
+          <button class="btn btn-light cancel-btn">Request Cancellation</button>
+        </div>
+        <div class="track-bar mini-track hidden">
           <div class="step" data-step="order">Order</div>
           <div class="step" data-step="shipped">Shipped</div>
           <div class="step" data-step="out_for_delivery">Out for Delivery</div>

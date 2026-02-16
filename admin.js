@@ -9,6 +9,8 @@ const ADMIN = {
   session: "pv_admin_session",
 };
 
+const ITEM_STATUS = ["order", "shipped", "out_for_delivery", "delivered", "cancelled"];
+
 const defaultProducts = [
   {
     id: "p1",
@@ -54,6 +56,28 @@ let orders = getJSON(KEYS.orders, []);
 
 if (!localStorage.getItem(KEYS.products)) setJSON(KEYS.products, defaultProducts);
 
+function normalizeOrders() {
+  let changed = false;
+  orders.forEach((order) => {
+    order.items.forEach((item) => {
+      if (!item.status) {
+        item.status = "order";
+        changed = true;
+      }
+      if (!item.cancelRequest) {
+        item.cancelRequest = "none";
+        changed = true;
+      }
+      if (!item.cancelMessage) {
+        item.cancelMessage = "";
+        changed = true;
+      }
+    });
+  });
+  if (changed) setJSON(KEYS.orders, orders);
+}
+normalizeOrders();
+
 function isLoggedIn() {
   return localStorage.getItem(ADMIN.session) === "1";
 }
@@ -63,7 +87,7 @@ function showPanel() {
   $("#adminPanel").classList.remove("hidden");
   $("#adminSignOut").classList.remove("hidden");
   renderProducts();
-  renderOrders();
+  renderOrderItems();
 }
 function showLogin() {
   $("#adminLogin").classList.remove("hidden");
@@ -147,54 +171,93 @@ function renderProducts() {
   });
 }
 
-function renderOrders() {
-  const tbody = $("#ordersTable");
-  tbody.innerHTML = "";
-  const query = $("#orderSearch").value.toLowerCase().trim();
-  const statusFilter = $("#statusFilter").value;
-
-  orders
-    .slice()
-    .reverse()
-    .filter((o) => {
-      const text = `${o.id} ${o.userName} ${o.userEmail}`.toLowerCase();
-      const byQuery = !query || text.includes(query);
-      const byStatus = statusFilter === "all" || o.status === statusFilter;
-      return byQuery && byStatus;
-    })
-    .forEach((o) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${o.id}</td>
-        <td>${o.userName}<br/><small>${o.userEmail}</small></td>
-        <td>${o.phone}</td>
-        <td>${o.items.map((i) => `${i.name} x${i.qty}`).join("<br/>")}</td>
-        <td>₹${o.total}</td>
-        <td>${o.address.line}, ${o.address.city}, ${o.address.state} - ${o.address.pincode}</td>
-        <td>
-          <select data-order-id="${o.id}">
-            <option value="order" ${o.status === "order" ? "selected" : ""}>Order</option>
-            <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
-            <option value="out_for_delivery" ${o.status === "out_for_delivery" ? "selected" : ""}>Out for delivery</option>
-            <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
-          </select>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-  tbody.querySelectorAll("select[data-order-id]").forEach((select) => {
-    select.addEventListener("change", () => {
-      const order = orders.find((o) => o.id === select.dataset.orderId);
-      if (!order) return;
-      order.status = select.value;
-      setJSON(KEYS.orders, orders);
-    });
-  });
+function updateItemStatus(orderId, productId, status) {
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) return;
+  const item = order.items.find((i) => i.productId === productId);
+  if (!item) return;
+  item.status = status;
+  if (status === "cancelled") {
+    item.cancelRequest = "accepted";
+    item.cancelMessage = "Cancelled by admin.";
+  }
+  setJSON(KEYS.orders, orders);
+  renderOrderItems();
 }
 
-$("#orderSearch").addEventListener("input", renderOrders);
-$("#statusFilter").addEventListener("change", renderOrders);
+function resolveCancel(orderId, productId, action) {
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) return;
+  const item = order.items.find((i) => i.productId === productId);
+  if (!item) return;
+
+  if (action === "accept") {
+    item.cancelRequest = "accepted";
+    item.cancelMessage = "Cancellation approved.";
+    item.status = "cancelled";
+  } else {
+    const reason = prompt("Write reason for decline:", "Product already shipped");
+    if (!reason) return;
+    item.cancelRequest = "declined";
+    item.cancelMessage = reason;
+  }
+
+  setJSON(KEYS.orders, orders);
+  renderOrderItems();
+}
+
+function renderOrderItems() {
+  const list = $("#orderItemList");
+  list.innerHTML = "";
+  const q = $("#orderSearch").value.toLowerCase().trim();
+  const filter = $("#statusFilter").value;
+
+  const rows = [];
+  orders.forEach((order) => {
+    order.items.forEach((item) => rows.push({ order, item }));
+  });
+
+  rows
+    .reverse()
+    .filter(({ order, item }) => {
+      const text = `${order.id} ${order.userName} ${order.userEmail} ${item.name}`.toLowerCase();
+      const matchQuery = !q || text.includes(q);
+      const matchStatus = filter === "all" || item.status === filter;
+      return matchQuery && matchStatus;
+    })
+    .forEach(({ order, item }) => {
+      const card = document.createElement("div");
+      card.className = "card admin-order-item";
+      card.innerHTML = `
+        <p><strong>Order:</strong> ${order.id}</p>
+        <p><strong>User:</strong> ${order.userName} (${order.userEmail})</p>
+        <p><strong>Product:</strong> ${item.name} x ${item.qty}</p>
+        <p><strong>Current Status:</strong> <span class="badge">${item.status.replaceAll("_", " ")}</span></p>
+        <label>Update Status</label>
+        <select class="item-status">
+          ${ITEM_STATUS.map((s) => `<option value="${s}" ${item.status === s ? "selected" : ""}>${s.replaceAll("_", " ")}</option>`).join("")}
+        </select>
+        <div class="cancel-admin-box ${item.cancelRequest === "pending" ? "pending" : ""}">
+          <p><strong>Cancel Request:</strong> ${item.cancelRequest}</p>
+          <p>${item.cancelMessage || "No note"}</p>
+          <div class="inline-inputs">
+            <button class="btn btn-light accept-cancel" ${item.cancelRequest !== "pending" ? "disabled" : ""}>Accept</button>
+            <button class="btn btn-light decline-cancel" ${item.cancelRequest !== "pending" ? "disabled" : ""}>Decline</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector(".item-status").addEventListener("change", (e) => updateItemStatus(order.id, item.productId, e.target.value));
+      card.querySelector(".accept-cancel").addEventListener("click", () => resolveCancel(order.id, item.productId, "accept"));
+      card.querySelector(".decline-cancel").addEventListener("click", () => resolveCancel(order.id, item.productId, "decline"));
+      list.appendChild(card);
+    });
+
+  if (!list.innerHTML) list.innerHTML = `<p>No order items found.</p>`;
+}
+
+$("#orderSearch").addEventListener("input", renderOrderItems);
+$("#statusFilter").addEventListener("change", renderOrderItems);
 
 $("#productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -230,7 +293,7 @@ $("#productForm").addEventListener("submit", async (e) => {
 $("#clearOrders").addEventListener("click", () => {
   orders = [];
   setJSON(KEYS.orders, orders);
-  renderOrders();
+  renderOrderItems();
 });
 
 $("#resetDemoData").addEventListener("click", () => {
@@ -242,9 +305,10 @@ $("#resetDemoData").addEventListener("click", () => {
 window.addEventListener("storage", () => {
   products = getJSON(KEYS.products, []);
   orders = getJSON(KEYS.orders, []);
+  normalizeOrders();
   if (isLoggedIn()) {
     renderProducts();
-    renderOrders();
+    renderOrderItems();
   }
 });
 
@@ -252,7 +316,8 @@ setInterval(() => {
   const latestOrders = getJSON(KEYS.orders, []);
   if (JSON.stringify(latestOrders) !== JSON.stringify(orders)) {
     orders = latestOrders;
-    if (isLoggedIn()) renderOrders();
+    normalizeOrders();
+    if (isLoggedIn()) renderOrderItems();
   }
 }, 1500);
 

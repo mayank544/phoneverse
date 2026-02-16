@@ -59,31 +59,19 @@
               <div id="productsAdminList"></div>
             </div>
             <div class="card">
-              <h3>Live Orders</h3>
+              <h3>Order Item Management</h3>
               <div class="filters">
-                <input id="orderSearch" placeholder="Search by user/order id" />
+                <input id="orderSearch" placeholder="Search by user/order/product" />
                 <select id="statusFilter">
                   <option value="all">All status</option>
                   <option value="order">Order</option>
                   <option value="shipped">Shipped</option>
                   <option value="out_for_delivery">Out for Delivery</option>
                   <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>User</th>
-                    <th>Phone</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Address</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="ordersTable"></tbody>
-              </table>
+              <div id="orderItemList"></div>
             </div>
           </div>
         </div>

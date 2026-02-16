@@ -71,6 +71,30 @@ const pages = {
   orders: $("#ordersPage"),
 };
 
+const STATUS_FLOW = ["order", "shipped", "out_for_delivery", "delivered"];
+
+function normalizeOrders() {
+  let changed = false;
+  state.orders.forEach((order) => {
+    order.items.forEach((item) => {
+      if (!item.status) {
+        item.status = order.status || "order";
+        changed = true;
+      }
+      if (!item.cancelRequest) {
+        item.cancelRequest = "none";
+        changed = true;
+      }
+      if (!item.cancelMessage) {
+        item.cancelMessage = "";
+        changed = true;
+      }
+    });
+  });
+  if (changed) saveState();
+}
+normalizeOrders();
+
 function saveState() {
   setJSON(KEYS.products, state.products);
   setJSON(KEYS.users, state.users);
@@ -86,6 +110,16 @@ function userCart() {
   const id = userId();
   state.carts[id] = state.carts[id] || [];
   return state.carts[id];
+}
+
+function cartTotals() {
+  const subtotal = userCart().reduce((sum, item) => {
+    const p = state.products.find((x) => x.id === item.productId);
+    return p ? sum + p.price * item.qty : sum;
+  }, 0);
+  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
+  const tax = 0;
+  return { subtotal, delivery, tax, total: subtotal + delivery + tax };
 }
 
 function showPage(name) {
@@ -125,7 +159,6 @@ function renderProducts() {
       node.querySelector(".view-btn").addEventListener("click", () => {
         location.href = `product-detail.html?id=${encodeURIComponent(p.id)}`;
       });
-
       node.querySelector(".cart-btn").addEventListener("click", () => addToCart(p.id, 1));
       node.querySelector(".buy-btn").addEventListener("click", () => {
         addToCart(p.id, 1);
@@ -148,6 +181,27 @@ function addToCart(productId, qty) {
   }
   saveState();
   renderCartCount();
+  if (!pages.checkout.classList.contains("hidden")) renderCheckout();
+}
+
+function updateCartItem(productId, qty) {
+  const cart = userCart();
+  const product = state.products.find((p) => p.id === productId);
+  if (!product) return;
+  const item = cart.find((i) => i.productId === productId);
+  if (!item) return;
+  const safeQty = Math.max(1, Math.min(qty, product.stock));
+  item.qty = safeQty;
+  saveState();
+  renderCartCount();
+  renderCheckout();
+}
+
+function removeCartItem(productId) {
+  state.carts[userId()] = userCart().filter((i) => i.productId !== productId);
+  saveState();
+  renderCartCount();
+  renderCheckout();
 }
 
 function renderCartCount() {
@@ -165,29 +219,59 @@ function renderCheckout() {
   const wrap = $("#cartItems");
   wrap.innerHTML = "";
   const cart = userCart();
-  let total = 0;
 
   if (!cart.length) wrap.innerHTML = "<p>Your cart is empty.</p>";
 
   cart.forEach((item) => {
     const p = state.products.find((x) => x.id === item.productId);
     if (!p) return;
-    const itemTotal = p.price * item.qty;
-    total += itemTotal;
     const row = document.createElement("div");
-    row.innerHTML = `<span>${p.name} x ${item.qty}</span><strong>₹${itemTotal}</strong>`;
+    row.className = "cart-row";
+    row.innerHTML = `
+      <div>
+        <strong>${p.name}</strong>
+        <p>₹${p.price} x ${item.qty} = ₹${p.price * item.qty}</p>
+      </div>
+      <div class="cart-actions">
+        <button class="btn btn-light qty-minus">-</button>
+        <span>${item.qty}</span>
+        <button class="btn btn-light qty-plus">+</button>
+        <button class="btn btn-light del-item">Delete</button>
+      </div>
+    `;
+    row.querySelector(".qty-minus").addEventListener("click", () => updateCartItem(item.productId, item.qty - 1));
+    row.querySelector(".qty-plus").addEventListener("click", () => updateCartItem(item.productId, item.qty + 1));
+    row.querySelector(".del-item").addEventListener("click", () => removeCartItem(item.productId));
     wrap.appendChild(row);
   });
 
-  $("#cartTotal").textContent = total;
+  const totals = cartTotals();
+  $("#cartSubtotal").textContent = totals.subtotal;
+  $("#deliveryCharge").textContent = totals.delivery;
+  $("#taxCharge").textContent = totals.tax;
+  $("#cartTotal").textContent = totals.total;
 }
 
 function activateTracking(container, status) {
-  const flow = ["order", "shipped", "out_for_delivery", "delivered"];
-  const index = flow.indexOf(status);
+  const index = STATUS_FLOW.indexOf(status);
   container.querySelectorAll(".step").forEach((step, i) => {
     step.classList.toggle("active", i <= index);
   });
+}
+
+function requestCancellation(orderId, productId) {
+  const order = state.orders.find((o) => o.id === orderId);
+  if (!order) return;
+  const item = order.items.find((i) => i.productId === productId);
+  if (!item || item.cancelRequest !== "none") return;
+  if (item.status === "delivered" || item.status === "cancelled") {
+    alert("This item cannot be cancelled now.");
+    return;
+  }
+  item.cancelRequest = "pending";
+  item.cancelMessage = "Cancellation request sent to admin.";
+  saveState();
+  renderMyOrders();
 }
 
 function renderMyOrders() {
@@ -197,18 +281,54 @@ function renderMyOrders() {
   list.innerHTML = "";
 
   const myOrders = state.orders.filter((o) => o.userEmail === userId()).slice().reverse();
-  if (!myOrders.length) {
+  const rows = [];
+  myOrders.forEach((order) => {
+    order.items.forEach((item) => rows.push({ order, item }));
+  });
+
+  if (!rows.length) {
     list.innerHTML = `<div class="card"><p>No orders yet.</p></div>`;
     return;
   }
 
-  myOrders.forEach((order) => {
+  rows.forEach(({ order, item }) => {
     const card = $("#orderCardTpl").content.firstElementChild.cloneNode(true);
     card.querySelector(".order-id").textContent = `Order ID: ${order.id}`;
-    card.querySelector(".order-status").textContent = order.status.replaceAll("_", " ");
-    card.querySelector(".order-total").textContent = order.total;
-    card.querySelector(".order-items").textContent = order.items.map((i) => `${i.name} x ${i.qty}`).join(" | ");
-    activateTracking(card.querySelector(".mini-track"), order.status);
+    card.querySelector(".order-item").textContent = item.name;
+    card.querySelector(".order-status").textContent = item.status.replaceAll("_", " ");
+    card.querySelector(".order-qty").textContent = item.qty;
+    card.querySelector(".order-price").textContent = item.price;
+
+    const trackWrap = card.querySelector(".mini-track");
+    card.querySelector(".track-btn").addEventListener("click", () => {
+      trackWrap.classList.toggle("hidden");
+      activateTracking(trackWrap, item.status);
+    });
+
+    const cancelBtn = card.querySelector(".cancel-btn");
+    cancelBtn.addEventListener("click", () => requestCancellation(order.id, item.productId));
+
+    const note = card.querySelector(".cancel-note");
+    if (item.cancelRequest === "pending") {
+      note.textContent = "Cancellation request pending admin approval.";
+      note.classList.remove("hidden");
+      cancelBtn.disabled = true;
+    } else if (item.cancelRequest === "accepted") {
+      note.textContent = "Product cancelled by admin.";
+      note.classList.remove("hidden");
+      cancelBtn.disabled = true;
+    } else if (item.cancelRequest === "declined") {
+      note.textContent = `Cancellation declined: ${item.cancelMessage || "No reason"}`;
+      note.classList.remove("hidden");
+      cancelBtn.disabled = true;
+    }
+
+    if (item.status === "cancelled") {
+      note.textContent = "Product cancelled.";
+      note.classList.remove("hidden");
+      cancelBtn.disabled = true;
+    }
+
     list.appendChild(card);
   });
 }
@@ -319,15 +439,23 @@ $("#placeOrderBtn").addEventListener("click", () => {
   if (!cart.length) return alert("Cart empty");
   if (!state.currentAddress) return alert("Please add address first.");
 
-  let total = 0;
+  const totals = cartTotals();
   const items = [];
   for (const c of cart) {
     const p = state.products.find((x) => x.id === c.productId);
     if (!p || p.stock < c.qty) return alert(`Stock issue for ${p?.name || c.productId}`);
     p.stock -= c.qty;
     const lineTotal = p.price * c.qty;
-    total += lineTotal;
-    items.push({ productId: p.id, name: p.name, qty: c.qty, unitPrice: p.price, price: lineTotal });
+    items.push({
+      productId: p.id,
+      name: p.name,
+      qty: c.qty,
+      unitPrice: p.price,
+      price: lineTotal,
+      status: "order",
+      cancelRequest: "none",
+      cancelMessage: "",
+    });
   }
 
   const order = {
@@ -336,10 +464,12 @@ $("#placeOrderBtn").addEventListener("click", () => {
     userName: state.currentUser.name,
     phone: state.currentUser.phone,
     items,
-    total,
+    subtotal: totals.subtotal,
+    deliveryCharge: totals.delivery,
+    tax: 0,
+    total: totals.total,
     address: state.currentAddress,
     payment: "cod",
-    status: "order",
     createdAt: new Date().toISOString(),
   };
 
@@ -355,6 +485,7 @@ window.addEventListener("storage", () => {
   state.products = getJSON(KEYS.products, []);
   state.orders = getJSON(KEYS.orders, []);
   state.carts = getJSON(KEYS.carts, {});
+  normalizeOrders();
   renderProducts();
   renderCartCount();
 });
@@ -363,6 +494,7 @@ setInterval(() => {
   const latest = getJSON(KEYS.orders, []);
   if (JSON.stringify(latest) !== JSON.stringify(state.orders)) {
     state.orders = latest;
+    normalizeOrders();
     if (!$("#ordersPage").classList.contains("hidden")) renderMyOrders();
   }
 }, 1500);
