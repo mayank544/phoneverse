@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PhoneVerse Store</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top-nav">
+      <div class="brand">PhoneVerse</div>
+      <div class="search-wrap">
+        <input id="searchInput" type="text" placeholder="Search products..." />
+      </div>
+      <div class="nav-right">
+        <button id="goHome" class="btn btn-light">Home</button>
+        <button id="goCheckout" class="btn btn-gold">Cart (<span id="cartCount">0</span>)</button>
+        <button id="goOrders" class="btn btn-light">My Orders</button>
+        <button id="authBtn" class="btn btn-light">Sign In</button>
+      </div>
+    </header>
+
+    <main class="container fade-in">
+      <section id="authSection" class="card hidden slide-up">
+        <h2>Account</h2>
+        <div class="tab-row">
+          <button data-tab="signin" class="tab active">Sign In</button>
+          <button data-tab="signup" class="tab">Create Account</button>
+        </div>
+        <form id="signinForm" class="auth-form">
+          <input required id="signinEmail" type="email" placeholder="Email" />
+          <input required id="signinPassword" type="password" placeholder="Password" />
+          <button class="btn btn-gold" type="submit">Sign In</button>
+        </form>
+        <form id="signupForm" class="auth-form hidden">
+          <input required id="signupName" type="text" placeholder="Full Name" />
+          <input required id="signupEmail" type="email" placeholder="Email" />
+          <input required id="signupPhone" type="tel" placeholder="Phone" />
+          <input required id="signupPassword" type="password" placeholder="Password" />
+          <button class="btn btn-gold" type="submit">Create Account</button>
+        </form>
+        <p id="authMsg" class="msg"></p>
+      </section>
+
+      <section id="storePage">
+        <h2>Today's Deals</h2>
+        <div id="productGrid" class="grid"></div>
+      </section>
+
+      <section id="checkoutPage" class="hidden slide-up">
+        <h2>Payment & Delivery</h2>
+        <div class="checkout-layout">
+          <div class="card">
+            <h3>Cart Summary</h3>
+            <div id="cartItems"></div>
+            <p class="total">Total: ₹<span id="cartTotal">0</span></p>
+          </div>
+
+          <div class="card">
+            <h3>Payment Method</h3>
+            <label class="pay-option"><input checked type="radio" name="pay" value="cod" /> Cash on Delivery</label>
+            <label class="pay-option"><input type="radio" name="pay" value="upi" disabled /> UPI <span class="coming">(Coming Soon)</span></label>
+            <label class="pay-option"><input type="radio" name="pay" value="net" disabled /> Net Banking <span class="coming">(Coming Soon)</span></label>
+
+            <h3>Delivery Address</h3>
+            <form id="addressForm">
+              <input required id="addrName" type="text" placeholder="Full Name" />
+              <input required id="addrPhone" type="tel" placeholder="Phone Number for call" />
+              <textarea required id="addrLine" placeholder="Flat, house no, building, area, street"></textarea>
+              <input required id="addrCity" type="text" placeholder="City" />
+              <input required id="addrState" type="text" placeholder="State" />
+              <input required id="addrPincode" type="text" placeholder="Pincode" />
+              <textarea id="addrInstruction" placeholder="Add delivery instruction (optional)"></textarea>
+              <button class="btn btn-light" type="submit">Add Address</button>
+            </form>
+
+            <div id="addressPreview" class="address-preview hidden"></div>
+            <button id="placeOrderBtn" class="btn btn-gold" disabled>Deliver on this Address & Place Order</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="ordersPage" class="hidden slide-up">
+        <h2>My Orders</h2>
+        <div id="ordersList"></div>
+      </section>
+    </main>
+
+    <template id="productCardTpl">
+      <article class="product-card pop-in">
+        <img class="product-image" alt="" />
+        <h3 class="product-title"></h3>
+        <p class="product-desc"></p>
+        <p class="price">₹<span class="product-price"></span></p>
+        <p class="stock">Stock: <span class="product-stock"></span></p>
+        <div class="btn-group">
+          <button class="btn btn-light view-btn">View Detail</button>
+          <button class="btn btn-light cart-btn">Add to Cart</button>
+          <button class="btn btn-gold buy-btn">Buy Now</button>
+        </div>
+      </article>
+    </template>
+
+    <template id="orderCardTpl">
+      <article class="card order-card pop-in">
+        <h3 class="order-id"></h3>
+        <p><strong>Status:</strong> <span class="order-status badge"></span></p>
+        <p><strong>Total:</strong> ₹<span class="order-total"></span></p>
+        <p class="order-items"></p>
+        <div class="track-bar mini-track">
+          <div class="step" data-step="order">Order</div>
+          <div class="step" data-step="shipped">Shipped</div>
+          <div class="step" data-step="out_for_delivery">Out for Delivery</div>
+          <div class="step" data-step="delivered">Delivered</div>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
