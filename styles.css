@@ -40,6 +40,7 @@ h1,h2,h3,h4{color:#fff}p{color:var(--muted);line-height:1.6}
 .eyebrow{font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--turq)}
 .hero h1{font-size:clamp(2rem,6vw,4rem);margin:.4rem 0}.subheading{font-size:clamp(1rem,2vw,1.28rem)}
 .hero-actions{display:flex;gap:.8rem;flex-wrap:wrap}
+.hero-visual{display:grid;place-items:center;padding:1rem;border:1px solid rgba(0,242,255,.25);border-radius:24px;background:rgba(5,16,38,.55);box-shadow:0 0 28px rgba(0,242,255,.18)}
 .hero-bottle{width:min(410px,95%);display:block;margin:0 auto;filter:drop-shadow(0 0 40px rgba(0,242,255,.4));animation:bob 4.5s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-14px)}}
 

@@ -39,3 +39,21 @@ window.addEventListener('scroll', () => {
     el.style.transform = `translateY(${y * speed}px)`;
   });
 });
+
+const contactForm = document.querySelector('#contactForm');
+if (contactForm) {
+  contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(contactForm);
+    const name = data.get('name') || '';
+    const business = data.get('business') || '';
+    const quantity = data.get('quantity') || '___';
+    const message = data.get('message') || '';
+    const text = `I want to customize.
+Name: ${name}
+Business: ${business}
+I need ${quantity} quantity.
+Message: ${message}`;
+    window.open(`https://wa.me/917503315833?text=${encodeURIComponent(text)}`, '_blank');
+  });
+}
