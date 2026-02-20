@@ -44,7 +44,7 @@ h1,h2,h3,h4{color:#fff}p{color:var(--muted);line-height:1.6}
 .eyebrow{font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--turq)}
 .hero h1{font-size:clamp(2rem,6vw,4rem);margin:.4rem 0}.subheading{font-size:clamp(1rem,2vw,1.28rem)}
 .hero-actions{display:flex;gap:.8rem;flex-wrap:wrap}
-.hero-visual{display:grid;place-items:center;padding:1rem;border:1px solid rgba(0,242,255,.25);border-radius:24px;background:rgba(5,16,38,.55);box-shadow:0 0 28px rgba(0,242,255,.18)}
+.hero-visual{display:grid;place-items:center;padding:0;border:none;border-radius:0;background:transparent;box-shadow:none}
 .hero-bottle{width:min(410px,95%);display:block;margin:0 auto;filter:drop-shadow(0 0 40px rgba(0,242,255,.4));animation:bob 4.5s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-14px)}}
 .tag-row{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem}.tag-row span{padding:.35rem .7rem;border:1px solid rgba(0,242,255,.3);border-radius:999px;font-size:.82rem;background:rgba(0,242,255,.08);color:#d5f7ff}
@@ -85,7 +85,7 @@ input:focus,textarea:focus{outline:1px solid var(--neon);box-shadow:0 0 10px rgb
 
 .whatsapp-float{position:fixed;right:1rem;bottom:1rem;z-index:70;background:linear-gradient(135deg,#25D366,#00f2ff);color:#032018;padding:.85rem 1rem;border-radius:999px;font-weight:900;text-decoration:none;box-shadow:0 0 18px rgba(37,211,102,.55)}
 .site-footer{margin-top:1.5rem;border-top:1px solid rgba(255,255,255,.1);padding:2rem 0 1rem}.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:1rem}
-.site-footer ul{list-style:none;padding:0;margin:0}.site-footer a{text-decoration:none;color:#b8daed}.socials a{border:1px solid var(--border);padding:.4rem .6rem;border-radius:999px}
+.site-footer ul{list-style:none;padding:0;margin:0}.site-footer a{text-decoration:none;color:#b8daed}.socials a{border:1px solid var(--border);padding:.5rem .75rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center}
 .copyright{text-align:center;color:#8fb2c7;margin-top:1rem}
 
 .reveal{opacity:0;transform:translateY(16px);transition:.6s ease}.reveal.visible{opacity:1;transform:translateY(0)}
