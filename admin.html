@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZamGlow ✨ Admin</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top-nav">
+      <div class="brand">ZamGlow ✨ Admin</div>
+      <div class="nav-right">
+        <a class="admin-link" href="index.html">Back to Store</a>
+        <button id="adminSignOut" class="btn btn-light hidden">Sign Out</button>
+      </div>
+    </header>
+
+    <main class="admin-wrapper fade-in">
+      <section id="adminLogin" class="card slide-up">
+        <h2>Admin Access</h2>
+        <form id="adminLoginForm" class="auth-form">
+          <input required id="adminEmail" type="text" placeholder="Admin Username" />
+          <input required id="adminPassword" type="password" placeholder="Admin Password" />
+          <button type="submit" class="btn btn-gold">Login</button>
+        </form>
+        <p id="adminMsg" class="msg"></p>
+      </section>
+
+      <section id="adminPanel" class="hidden">
+        <div class="admin-grid">
+          <div>
+            <div class="card">
+              <h3>Add Earrings Product</h3>
+              <form id="productForm" class="auth-form">
+                <input id="pName" required placeholder="Product Name" />
+                <textarea id="pDesc" required placeholder="Short Description"></textarea>
+                <textarea id="pLongDesc" required placeholder="Full Detail Description"></textarea>
+                <input id="pBrand" placeholder="Brand" value="ZamGlow ✨" />
+                <input id="pCategory" placeholder="Category" value="Earrings" />
+                <textarea id="pHighlights" placeholder="Highlights (comma separated)"></textarea>
+                <input id="pPrice" required type="number" min="1" placeholder="Price" />
+                <input id="pStock" required type="number" min="0" placeholder="Stock" />
+                <input id="pImage" type="file" accept="image/*" />
+                <button type="submit" class="btn btn-gold">Add Product</button>
+              </form>
+            </div>
+
+            <div class="card">
+              <h3>Control Panel</h3>
+              <button id="clearOrders" class="btn btn-light">Clear All Orders</button>
+              <button id="resetDemoData" class="btn btn-light">Reset Demo Catalog</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <h3>Products List (Unlimited)</h3>
+              <div id="productsAdminList"></div>
+            </div>
+
+            <div class="card">
+              <h3>Order Item Management</h3>
+              <div id="statusSummary" class="summary-grid"></div>
+              <div class="filters">
+                <input id="orderSearch" placeholder="Search by user/order/product" />
+                <select id="statusFilter">
+                  <option value="all">All status</option>
+                  <option value="order">Order</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="out_for_delivery">Out for Delivery</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div id="orderItemList"></div>
+            </div>
+
+            <div class="card">
+              <h3>Cleared Orders</h3>
+              <div id="clearedOrderList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
