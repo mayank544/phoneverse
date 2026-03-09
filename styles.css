@@ -22,7 +22,10 @@
 .order-card{margin-bottom:.9rem}.timeline p{margin:.28rem 0;font-size:.85rem}.cancel-note{margin:.45rem 0;color:#b12704;font-weight:600}
 .admin-wrapper{max-width:1280px;margin:1rem auto;padding:.8rem}.admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:.8rem}.badge{padding:.25rem .5rem;border-radius:999px;background:#ececec;text-transform:capitalize}
 .filters{display:grid;grid-template-columns:2fr 1fr;gap:.5rem;margin-bottom:.7rem}.product-admin-row{display:grid;grid-template-columns:88px 1fr;gap:.7rem}.thumb{width:88px;height:88px;object-fit:cover;border-radius:8px}.inline-inputs{display:flex;gap:.45rem;margin-top:.5rem;flex-wrap:wrap}
-.detail-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:.8rem}.detail-image{width:100%;max-height:420px;object-fit:cover;border-radius:12px}.admin-order-item{margin-bottom:.6rem}.cancel-admin-box{margin-top:.5rem;background:#f7f7f7;border:1px solid #ddd;border-radius:8px;padding:.6rem}.cancel-admin-box.pending{border-color:#f0c14b;background:#fff7d7}
+.detail-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:.8rem}.detail-image{width:100%;max-height:420px;object-fit:cover;border-radius:12px}.admin-order-item{margin-bottom:.6rem}
+.order-full-detail{margin:.5rem 0;border:1px solid #ddd;background:#fafafa;border-radius:8px;padding:.55rem}
+.order-full-detail p{margin:.25rem 0;font-size:.86rem}
+.cancel-admin-box{margin-top:.5rem;background:#f7f7f7;border:1px solid #ddd;border-radius:8px;padding:.6rem}.cancel-admin-box.pending{border-color:#f0c14b;background:#fff7d7}
 .summary-grid{display:grid;grid-template-columns:repeat(5,minmax(70px,1fr));gap:.35rem;margin-bottom:.7rem}.summary-chip{background:#f4f4f4;border:1px solid #ddd;border-radius:8px;padding:.4rem;text-align:center}.summary-chip strong{display:block;font-size:.95rem}.summary-chip span{font-size:.72rem;text-transform:capitalize;color:#444}
 hr{border:none;border-top:1px solid #ddd;margin:1rem 0}
 .fade-in{animation:fadeIn .5s ease}.slide-up{animation:slideUp .35s ease}.pop-in{animation:popIn .32s ease}
