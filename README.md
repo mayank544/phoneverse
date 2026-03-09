@@ -1,14 +1,25 @@
-# PhoneVerse Dropshipping Demo
+# ZamGlow ✨ Earrings Store Demo
 
-Updated Amazon-style front-end demo with:
-- Main store page with search, view detail (separate page), add to cart, buy now.
-- My Orders page with each ordered product shown separately.
-- "Track Package" button on each ordered product card.
-- "Request Cancellation" on each ordered product with admin approval flow.
-- Cart quantity increase/decrease, delete item, and dynamic pricing.
-- Delivery charge rule: `₹40` if subtotal `< ₹500`, otherwise free.
-- Tax always `₹0`.
-- Admin page with per-product order status updates and cancellation accept/decline with reason.
+Features:
+- Earrings-focused storefront branded as **ZamGlow ✨**.
+- Admin is not exposed in store navbar.
+- Admin login is handled from sign-in using:
+  - Username: `admin username`
+  - Password: `admin12345678`
+- My Orders with per-product tracking and cancellation requests.
+- Cart quantity +/- and delete controls.
+- Delivery rule: `₹40` below `₹500`, free above/equal `₹500`.
+- Tax fixed to `₹0`.
+- Stock label rules:
+  - `In Stock` when stock > 10
+  - `Only X left` when stock <= 10
+- Stock auto-updates after successful order placement.
+- Admin can:
+  - Manage unlimited products
+  - Update per-item order status
+  - Accept/decline cancellation with reason
+  - Delete cancelled product items from order list
+  - Filter and view status summaries
 
 ## Run
 ```bash
@@ -18,7 +29,3 @@ Open:
 - Store: `http://localhost:4173/index.html`
 - Product detail: `http://localhost:4173/product-detail.html?id=p1`
 - Admin: `http://localhost:4173/admin.html`
-
-## Admin Login
-- Email: `mayank75033@gmail.com`
-- Password: `m7503315833`

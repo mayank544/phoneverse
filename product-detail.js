@@ -16,8 +16,8 @@ if (!product) {
       <p class="price">₹${product.price}</p>
       <p><strong>Stock:</strong> ${product.stock}</p>
       <p><strong>Short Description:</strong> ${product.desc}</p>
-      <p><strong>Brand:</strong> ${product.brand || "PhoneVerse"}</p>
-      <p><strong>Category:</strong> ${product.category || "General"}</p>
+      <p><strong>Brand:</strong> ${product.brand || "ZamGlow ✨"}</p>
+      <p><strong>Category:</strong> ${product.category || "Earrings"}</p>
       <hr />
       <h3>Full Product Details</h3>
       <p>${product.longDesc || product.desc}</p>

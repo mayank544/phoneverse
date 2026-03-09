@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PhoneVerse Store</title>
+    <title>ZamGlow ✨ Store</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="top-nav">
-      <div class="brand">PhoneVerse</div>
+      <div class="brand">ZamGlow ✨</div>
       <div class="search-wrap">
-        <input id="searchInput" type="text" placeholder="Search products..." />
+        <input id="searchInput" type="text" placeholder="Search earrings..." />
       </div>
       <div class="nav-right">
         <button id="goHome" class="btn btn-light">Home</button>
@@ -28,9 +28,10 @@
           <button data-tab="signup" class="tab">Create Account</button>
         </div>
         <form id="signinForm" class="auth-form">
-          <input required id="signinEmail" type="email" placeholder="Email" />
+          <input required id="signinEmail" type="text" placeholder="Email / Username" />
           <input required id="signinPassword" type="password" placeholder="Password" />
           <button class="btn btn-gold" type="submit">Sign In</button>
+          <small>Admin login: username <b>admin username</b> and password <b>admin12345678</b></small>
         </form>
         <form id="signupForm" class="auth-form hidden">
           <input required id="signupName" type="text" placeholder="Full Name" />
@@ -43,7 +44,7 @@
       </section>
 
       <section id="storePage">
-        <h2>Today's Deals</h2>
+        <h2>ZamGlow ✨ Earrings Collection</h2>
         <div id="productGrid" class="grid"></div>
       </section>
 
@@ -97,7 +98,7 @@
         <h3 class="product-title"></h3>
         <p class="product-desc"></p>
         <p class="price">₹<span class="product-price"></span></p>
-        <p class="stock">Stock: <span class="product-stock"></span></p>
+        <p class="stock stock-label"></p>
         <div class="btn-group">
           <button class="btn btn-light view-btn">View Detail</button>
           <button class="btn btn-light cart-btn">Add to Cart</button>
