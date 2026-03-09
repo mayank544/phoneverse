@@ -325,7 +325,7 @@ $("#authBtn").onclick = () => {
     showPage("store");
     return;
   }
-  $("#authSection").classList.toggle("hidden");
+  $("#authSection").classList.remove("hidden");
 };
 
 $("#goHome").onclick = () => {

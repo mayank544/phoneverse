@@ -4,13 +4,14 @@ Features:
 - Mobile-friendly ZamGlow ✨ storefront.
 - Customer sign-up/sign-in, cart, checkout, My Orders.
 - Admin redirect from store sign-in using username/password (same credentials on admin page).
-- My Orders shows tracking ID, contact, address, expected delivery and status timestamps.
+- My Orders shows tracking ID, contact, full address, expected delivery and status timestamps.
 - Per-item unique tracking IDs.
 - Cart quantity +/- and delete.
 - Delivery rule: `₹40` below `₹500`, else free. Tax always `₹0`.
 - Stock labels: `In Stock` (>10), `Only X left` (<=10).
 - Stock auto-reduces after order.
-- Admin panel has View Detail per order item with full customer/order information, status updates, cancellation actions, and delete cancelled option.
+- Admin panel has View Detail per order item with full customer/order information.
+- Admin can **Clear This Order**, and cleared orders move to a separate **Cleared Orders** section with **Restore Order** action.
 
 ## Run
 ```bash
