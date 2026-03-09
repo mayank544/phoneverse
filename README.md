@@ -3,6 +3,7 @@
 Features:
 - Mobile-friendly ZamGlow ✨ storefront.
 - Customer sign-up/sign-in, cart, checkout, My Orders.
+- Address book: save up to 3 addresses per user, reuse address, and delete saved addresses.
 - Admin redirect from store sign-in using username/password (same credentials on admin page).
 - My Orders shows tracking ID, contact, full address, expected delivery and status timestamps.
 - Per-item unique tracking IDs.

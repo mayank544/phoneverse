@@ -4,6 +4,7 @@ const KEYS = {
   currentUser: "pv_current_user",
   carts: "pv_carts",
   orders: "pv_orders",
+  addresses: "pv_addresses",
 };
 
 const ADMIN = { username: "admin username", password: "admin12345678", session: "pv_admin_session" };
@@ -53,6 +54,7 @@ function init() {
   if (!localStorage.getItem(KEYS.users)) setJSON(KEYS.users, []);
   if (!localStorage.getItem(KEYS.carts)) setJSON(KEYS.carts, {});
   if (!localStorage.getItem(KEYS.orders)) setJSON(KEYS.orders, []);
+  if (!localStorage.getItem(KEYS.addresses)) setJSON(KEYS.addresses, {});
 }
 init();
 
@@ -62,6 +64,7 @@ const state = {
   carts: getJSON(KEYS.carts, {}),
   orders: getJSON(KEYS.orders, []),
   currentUser: getJSON(KEYS.currentUser, null),
+  addresses: getJSON(KEYS.addresses, {}),
   currentAddress: null,
 };
 
@@ -72,6 +75,7 @@ const save = () => {
   setJSON(KEYS.carts, state.carts);
   setJSON(KEYS.orders, state.orders);
   setJSON(KEYS.currentUser, state.currentUser);
+  setJSON(KEYS.addresses, state.addresses);
 };
 const uid = () => state.currentUser?.email || "guest";
 function cart() {
@@ -130,6 +134,50 @@ function totals() {
   }, 0);
   const del = sub > 0 && sub < 500 ? 40 : 0;
   return { sub, del, total: sub + del };
+}
+
+
+function addressBook() {
+  const id = uid();
+  state.addresses[id] = state.addresses[id] || [];
+  return state.addresses[id];
+}
+
+function setAddressPreview(address) {
+  state.currentAddress = address;
+  $("#addressPreview").innerHTML = `<strong>Address Selected</strong><p>${address.name} (${address.phone})</p><p>${address.line}, ${address.city}, ${address.state} - ${address.pincode}</p>`;
+  $("#addressPreview").classList.remove("hidden");
+  $("#placeOrderBtn").disabled = false;
+}
+
+function renderSavedAddresses() {
+  const wrap = $("#savedAddressList");
+  if (!wrap) return;
+  const items = addressBook();
+  wrap.innerHTML = "";
+  if (!items.length) {
+    wrap.innerHTML = "<p class='muted'>No saved address yet.</p>";
+    return;
+  }
+  items.forEach((a) => {
+    const card = document.createElement("div");
+    card.className = "saved-address-item";
+    card.innerHTML = `<p><strong>${a.name}</strong> (${a.phone})</p><p>${a.line}, ${a.city}, ${a.state} - ${a.pincode}</p><div class='inline-inputs'><button class='btn btn-light use-address'>Use</button><button class='btn btn-light remove-address'>Delete</button></div>`;
+    card.querySelector('.use-address').onclick = () => {
+      setAddressPreview(a);
+    };
+    card.querySelector('.remove-address').onclick = () => {
+      state.addresses[uid()] = addressBook().filter((x) => x.id !== a.id);
+      if (state.currentAddress?.id === a.id) {
+        state.currentAddress = null;
+        $("#addressPreview").classList.add("hidden");
+        $("#placeOrderBtn").disabled = true;
+      }
+      save();
+      renderSavedAddresses();
+    };
+    wrap.appendChild(card);
+  });
 }
 
 function renderProducts() {
@@ -195,6 +243,7 @@ function showCheckout() {
   $("#authSection").classList.add("hidden");
   showPage("checkout");
   renderCheckout();
+  renderSavedAddresses();
 }
 
 function renderCheckout() {
@@ -382,7 +431,10 @@ $("#signinForm").onsubmit = (e) => {
 
 $("#addressForm").onsubmit = (e) => {
   e.preventDefault();
-  state.currentAddress = {
+  if (!ensureAuth()) return;
+  const existing = addressBook();
+  const addr = {
+    id: `ADDR${Date.now()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`,
     name: $("#addrName").value.trim(),
     phone: $("#addrPhone").value.trim(),
     line: $("#addrLine").value.trim(),
@@ -391,9 +443,14 @@ $("#addressForm").onsubmit = (e) => {
     pincode: $("#addrPincode").value.trim(),
     instruction: $("#addrInstruction").value.trim(),
   };
-  $("#addressPreview").innerHTML = `<strong>Address Added</strong><p>${state.currentAddress.name} (${state.currentAddress.phone})</p><p>${state.currentAddress.line}, ${state.currentAddress.city}, ${state.currentAddress.state} - ${state.currentAddress.pincode}</p>`;
-  $("#addressPreview").classList.remove("hidden");
-  $("#placeOrderBtn").disabled = false;
+  if (existing.length >= 3) {
+    $("#authMsg").textContent = "You can save maximum 3 addresses. Delete one first.";
+    return;
+  }
+  existing.push(addr);
+  save();
+  setAddressPreview(addr);
+  renderSavedAddresses();
 };
 
 $("#placeOrderBtn").onclick = () => {
@@ -447,6 +504,7 @@ $("#placeOrderBtn").onclick = () => {
   save();
   renderProducts();
   renderCartCount();
+  renderSavedAddresses();
   renderOrders();
 };
 
@@ -454,6 +512,7 @@ window.addEventListener("storage", () => {
   state.products = getJSON(KEYS.products, []);
   state.orders = getJSON(KEYS.orders, []);
   state.carts = getJSON(KEYS.carts, {});
+  state.addresses = getJSON(KEYS.addresses, {});
   normalize();
   renderProducts();
   renderCartCount();
@@ -462,9 +521,14 @@ window.addEventListener("storage", () => {
 setInterval(() => {
   const p = getJSON(KEYS.products, []);
   const o = getJSON(KEYS.orders, []);
+  const a = getJSON(KEYS.addresses, {});
   if (JSON.stringify(p) !== JSON.stringify(state.products)) {
     state.products = p;
     renderProducts();
+  }
+  if (JSON.stringify(a) !== JSON.stringify(state.addresses)) {
+    state.addresses = a;
+    if (!$("#checkoutPage").classList.contains("hidden")) renderSavedAddresses();
   }
   if (JSON.stringify(o) !== JSON.stringify(state.orders)) {
     state.orders = o;
@@ -476,4 +540,5 @@ setInterval(() => {
 authUI();
 renderProducts();
 renderCartCount();
+renderSavedAddresses();
 showPage("store");
