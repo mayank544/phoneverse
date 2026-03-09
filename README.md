@@ -1,25 +1,16 @@
 # ZamGlow ✨ Earrings Store Demo
 
 Features:
-- Earrings-focused storefront branded as **ZamGlow ✨**.
-- Admin is not exposed in store navbar.
-- Admin login is handled from sign-in using:
-  - Username: `admin username`
-  - Password: `admin12345678`
-- My Orders with per-product tracking and cancellation requests.
-- Cart quantity +/- and delete controls.
-- Delivery rule: `₹40` below `₹500`, free above/equal `₹500`.
-- Tax fixed to `₹0`.
-- Stock label rules:
-  - `In Stock` when stock > 10
-  - `Only X left` when stock <= 10
-- Stock auto-updates after successful order placement.
-- Admin can:
-  - Manage unlimited products
-  - Update per-item order status
-  - Accept/decline cancellation with reason
-  - Delete cancelled product items from order list
-  - Filter and view status summaries
+- Mobile-friendly ZamGlow ✨ storefront.
+- Customer sign-up/sign-in, cart, checkout, My Orders.
+- Per-product tracking with status timeline timestamps.
+- Expected delivery date shown (+7 days from order date).
+- Per-item unique tracking IDs.
+- Cart quantity +/- and delete.
+- Delivery rule: `₹40` below `₹500`, else free. Tax always `₹0`.
+- Stock labels: `In Stock` (>10), `Only X left` (<=10).
+- Stock auto-reduces after order.
+- Integrated admin panel with product CRUD, order status update, cancellation approval/decline, and delete cancelled items.
 
 ## Run
 ```bash

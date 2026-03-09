@@ -9,9 +9,7 @@
   <body>
     <header class="top-nav">
       <div class="brand">ZamGlow ✨</div>
-      <div class="search-wrap">
-        <input id="searchInput" type="text" placeholder="Search earrings..." />
-      </div>
+      <div class="search-wrap"><input id="searchInput" type="text" placeholder="Search earrings..." /></div>
       <div class="nav-right">
         <button id="goHome" class="btn btn-light">Home</button>
         <button id="goCheckout" class="btn btn-gold">Cart (<span id="cartCount">0</span>)</button>
@@ -31,7 +29,6 @@
           <input required id="signinEmail" type="text" placeholder="Email / Username" />
           <input required id="signinPassword" type="password" placeholder="Password" />
           <button class="btn btn-gold" type="submit">Sign In</button>
-          <small>Admin login: username <b>admin username</b> and password <b>admin12345678</b></small>
         </form>
         <form id="signupForm" class="auth-form hidden">
           <input required id="signupName" type="text" placeholder="Full Name" />
@@ -43,10 +40,7 @@
         <p id="authMsg" class="msg"></p>
       </section>
 
-      <section id="storePage">
-        <h2>ZamGlow ✨ Earrings Collection</h2>
-        <div id="productGrid" class="grid"></div>
-      </section>
+      <section id="storePage"><h2>ZamGlow ✨ Earrings Collection</h2><div id="productGrid" class="grid"></div></section>
 
       <section id="checkoutPage" class="hidden slide-up">
         <h2>Payment & Delivery</h2>
@@ -61,12 +55,11 @@
               <p class="total">Total: ₹<span id="cartTotal">0</span></p>
             </div>
           </div>
-
           <div class="card">
             <h3>Payment Method</h3>
             <label class="pay-option"><input checked type="radio" name="pay" value="cod" /> Cash on Delivery</label>
-            <label class="pay-option"><input type="radio" name="pay" value="upi" disabled /> UPI <span class="coming">(Coming Soon)</span></label>
-            <label class="pay-option"><input type="radio" name="pay" value="net" disabled /> Net Banking <span class="coming">(Coming Soon)</span></label>
+            <label class="pay-option"><input type="radio" name="pay" disabled /> UPI <span class="coming">(Coming Soon)</span></label>
+            <label class="pay-option"><input type="radio" name="pay" disabled /> Net Banking <span class="coming">(Coming Soon)</span></label>
 
             <h3>Delivery Address</h3>
             <form id="addressForm">
@@ -79,17 +72,13 @@
               <textarea id="addrInstruction" placeholder="Add delivery instruction (optional)"></textarea>
               <button class="btn btn-light" type="submit">Add Address</button>
             </form>
-
             <div id="addressPreview" class="address-preview hidden"></div>
             <button id="placeOrderBtn" class="btn btn-gold" disabled>Deliver on this Address & Place Order</button>
           </div>
         </div>
       </section>
 
-      <section id="ordersPage" class="hidden slide-up">
-        <h2>My Orders</h2>
-        <div id="ordersList"></div>
-      </section>
+      <section id="ordersPage" class="hidden slide-up"><h2>My Orders</h2><div id="ordersList"></div></section>
     </main>
 
     <template id="productCardTpl">
@@ -99,31 +88,27 @@
         <p class="product-desc"></p>
         <p class="price">₹<span class="product-price"></span></p>
         <p class="stock stock-label"></p>
-        <div class="btn-group">
-          <button class="btn btn-light view-btn">View Detail</button>
-          <button class="btn btn-light cart-btn">Add to Cart</button>
-          <button class="btn btn-gold buy-btn">Buy Now</button>
-        </div>
+        <div class="btn-group"><button class="btn btn-light view-btn">View Detail</button><button class="btn btn-light cart-btn">Add to Cart</button><button class="btn btn-gold buy-btn">Buy Now</button></div>
       </article>
     </template>
 
     <template id="orderCardTpl">
       <article class="card order-card pop-in">
         <h3 class="order-id"></h3>
+        <p><strong>Tracking ID:</strong> <span class="tracking-id"></span></p>
         <p><strong>Product:</strong> <span class="order-item"></span></p>
         <p><strong>Status:</strong> <span class="order-status badge"></span></p>
         <p><strong>Qty:</strong> <span class="order-qty"></span> | <strong>Price:</strong> ₹<span class="order-price"></span></p>
+        <p><strong>Contact:</strong> <span class="order-contact"></span></p>
+        <p><strong>Expected Delivery:</strong> <span class="expected-delivery"></span></p>
         <p class="cancel-note hidden"></p>
         <div class="btn-group">
           <button class="btn btn-light track-btn">Track Package</button>
           <button class="btn btn-light cancel-btn">Request Cancellation</button>
+          <button class="btn btn-light delete-btn hidden">Delete</button>
         </div>
-        <div class="track-bar mini-track hidden">
-          <div class="step" data-step="order">Order</div>
-          <div class="step" data-step="shipped">Shipped</div>
-          <div class="step" data-step="out_for_delivery">Out for Delivery</div>
-          <div class="step" data-step="delivered">Delivered</div>
-        </div>
+        <div class="track-bar mini-track hidden"><div class="step" data-step="order">Order</div><div class="step" data-step="shipped">Shipped</div><div class="step" data-step="out_for_delivery">Out for Delivery</div><div class="step" data-step="delivered">Delivered</div></div>
+        <div class="timeline hidden"></div>
       </article>
     </template>
 

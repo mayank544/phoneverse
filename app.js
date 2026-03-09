@@ -1,376 +1,49 @@
-const KEYS = {
-  products: "pv_products",
-  users: "pv_users",
-  currentUser: "pv_current_user",
-  carts: "pv_carts",
-  orders: "pv_orders",
-};
+const KEYS={products:"pv_products",users:"pv_users",currentUser:"pv_current_user",carts:"pv_carts",orders:"pv_orders"};
+const ADMIN={username:"admin username",password:"admin12345678",session:"pv_admin_session"};
+const FLOW=["order","shipped","out_for_delivery","delivered"];
+const defaultProducts=[{id:"p1",name:"ZamGlow Pearl Drop Earrings",desc:"Elegant pearl drop earrings for party and daily wear.",longDesc:"Premium anti-tarnish pearl drop earrings.",brand:"ZamGlow ✨",category:"Earrings",highlights:["Anti-tarnish","Lightweight"],price:499,stock:40,image:"https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80"},{id:"p2",name:"ZamGlow Hoop Earrings",desc:"Trendy hoops with glossy finish.",longDesc:"Classic hoop design.",brand:"ZamGlow ✨",category:"Earrings",highlights:["Skin safe","Daily wear"],price:299,stock:55,image:"https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=800&q=80"}];
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const getJSON=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch{return f}};
+const setJSON=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+if(!localStorage.getItem(KEYS.products))setJSON(KEYS.products,defaultProducts);
+if(!localStorage.getItem(KEYS.users))setJSON(KEYS.users,[]);
+if(!localStorage.getItem(KEYS.carts))setJSON(KEYS.carts,{});
+if(!localStorage.getItem(KEYS.orders))setJSON(KEYS.orders,[]);
+const state={products:getJSON(KEYS.products,[]),users:getJSON(KEYS.users,[]),carts:getJSON(KEYS.carts,{}),orders:getJSON(KEYS.orders,[]),currentUser:getJSON(KEYS.currentUser,null),currentAddress:null};
+const pages={store:$("#storePage"),checkout:$("#checkoutPage"),orders:$("#ordersPage")};
+const save=()=>{setJSON(KEYS.products,state.products);setJSON(KEYS.users,state.users);setJSON(KEYS.carts,state.carts);setJSON(KEYS.orders,state.orders);setJSON(KEYS.currentUser,state.currentUser)};
+const uid=()=>state.currentUser?.email||"guest";
+const cart=()=>{state.carts[uid()]=state.carts[uid()]||[];return state.carts[uid()]};
+const showPage=n=>{Object.values(pages).forEach(p=>p.classList.add("hidden"));pages[n].classList.remove("hidden")};
+const stockText=s=>s>10?"In Stock":s>0?`Only ${s} left`:"Out of Stock";
+const money=()=>{const sub=cart().reduce((a,i)=>{const p=state.products.find(x=>x.id===i.productId);return p?a+p.price*i.qty:a},0);const del=sub>0&&sub<500?40:0;return{sub,del,tax:0,total:sub+del}};
+function ensureAuth(){if(state.currentUser)return true;$("#authSection").classList.remove("hidden");$("#authMsg").textContent="Please sign in first.";return false}
+function authUI(){ $("#authBtn").textContent=state.currentUser?`Sign Out (${state.currentUser.name})`:"Sign In"; }
+function normalize(){let ch=false;state.orders.forEach(o=>o.items.forEach(i=>{if(!i.itemId){i.itemId=`ITM${Date.now()}${Math.random().toString(36).slice(2,6)}`;ch=true;}if(!i.trackingId){i.trackingId=`ZGTRK${Date.now()}${Math.random().toString(36).slice(2,5).toUpperCase()}`;ch=true;}if(!i.status)i.status="order",ch=true;if(!i.cancelRequest)i.cancelRequest="none",ch=true;if(!i.cancelMessage)i.cancelMessage="",ch=true;if(!i.statusHistory){i.statusHistory={order:o.createdAt||new Date().toISOString()};ch=true;}if(!i.expectedDelivery){const d=new Date(o.createdAt||Date.now());d.setDate(d.getDate()+7);i.expectedDelivery=d.toDateString();ch=true;}}));if(ch)save()}
+normalize();
 
-const ADMIN_CRED = { username: "admin username", password: "admin12345678", session: "pv_admin_session" };
+function renderProducts(){const q=$("#searchInput").value.toLowerCase().trim();const g=$("#productGrid");g.innerHTML="";state.products.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).forEach(p=>{const n=$("#productCardTpl").content.firstElementChild.cloneNode(true);n.querySelector(".product-image").src=p.image;n.querySelector(".product-title").textContent=p.name;n.querySelector(".product-desc").textContent=p.desc;n.querySelector(".product-price").textContent=p.price;n.querySelector(".stock-label").textContent=stockText(p.stock);const d=p.stock<=0;n.querySelectorAll("button").forEach(b=>b.disabled=d);n.querySelector(".view-btn").onclick=()=>location.href=`product-detail.html?id=${encodeURIComponent(p.id)}`;n.querySelector(".cart-btn").onclick=()=>add(p.id,1);n.querySelector(".buy-btn").onclick=()=>{add(p.id,1);showCheckout()};g.appendChild(n)})}
+function add(id,q){const p=state.products.find(x=>x.id===id);if(!p||p.stock<q)return alert("Out of stock");const c=cart();const e=c.find(i=>i.productId===id);if(e)e.qty=Math.min(e.qty+q,p.stock);else c.push({productId:id,qty:q});save();cartCount();if(!pages.checkout.classList.contains("hidden"))renderCheckout()}
+function cartCount(){$("#cartCount").textContent=cart().reduce((a,i)=>a+i.qty,0)}
+function upd(id,q){const p=state.products.find(x=>x.id===id),i=cart().find(x=>x.productId===id);if(!p||!i)return;i.qty=Math.max(1,Math.min(q,p.stock));save();cartCount();renderCheckout()}
+function delCart(id){state.carts[uid()]=cart().filter(i=>i.productId!==id);save();cartCount();renderCheckout()}
+function showCheckout(){if(!ensureAuth())return;$("#authSection").classList.add("hidden");showPage("checkout");renderCheckout()}
+function renderCheckout(){const w=$("#cartItems");w.innerHTML="";if(!cart().length)w.innerHTML="<p>Your cart is empty.</p>";cart().forEach(i=>{const p=state.products.find(x=>x.id===i.productId);if(!p)return;const r=document.createElement("div");r.className="cart-row";r.innerHTML=`<div><strong>${p.name}</strong><p>₹${p.price} x ${i.qty} = ₹${p.price*i.qty}</p></div><div class='cart-actions'><button class='btn btn-light m'>-</button><span>${i.qty}</span><button class='btn btn-light p'>+</button><button class='btn btn-light d'>Delete</button></div>`;r.querySelector(".m").onclick=()=>upd(i.productId,i.qty-1);r.querySelector(".p").onclick=()=>upd(i.productId,i.qty+1);r.querySelector(".d").onclick=()=>delCart(i.productId);w.appendChild(r)});const t=money();$("#cartSubtotal").textContent=t.sub;$("#deliveryCharge").textContent=t.del;$("#taxCharge").textContent=0;$("#cartTotal").textContent=t.total}
+function activate(container,status){const ix=FLOW.indexOf(status);container.querySelectorAll(".step").forEach((s,i)=>s.classList.toggle("active",i<=ix))}
+function fmt(ts){return new Date(ts).toLocaleString()}
+function reqCancel(orderId,itemId){const o=state.orders.find(x=>x.id===orderId);const i=o?.items.find(x=>x.itemId===itemId);if(!i||i.cancelRequest!=="none")return;if(["delivered","cancelled"].includes(i.status))return alert("Cannot cancel now");i.cancelRequest="pending";i.cancelMessage="Request sent";save();renderOrders()}
+function delDelivered(orderId,itemId){const o=state.orders.find(x=>x.id===orderId);if(!o)return;o.items=o.items.filter(i=>i.itemId!==itemId);if(!o.items.length)state.orders=state.orders.filter(x=>x.id!==orderId);save();renderOrders()}
+function renderOrders(){if(!ensureAuth())return;showPage("orders");const l=$("#ordersList");l.innerHTML="";const rows=[];state.orders.filter(o=>o.userEmail===uid()).slice().reverse().forEach(o=>o.items.forEach(i=>rows.push({o,i})));if(!rows.length)return l.innerHTML="<div class='card'><p>No orders yet.</p></div>";rows.forEach(({o,i})=>{const c=$("#orderCardTpl").content.firstElementChild.cloneNode(true);c.querySelector(".order-id").textContent=`Order ID: ${o.id}`;c.querySelector(".tracking-id").textContent=i.trackingId;c.querySelector(".order-item").textContent=i.name;c.querySelector(".order-status").textContent=i.status.replaceAll("_"," ");c.querySelector(".order-qty").textContent=i.qty;c.querySelector(".order-price").textContent=i.price;c.querySelector(".order-contact").textContent=`${o.userEmail} | ${o.phone}`;c.querySelector(".expected-delivery").textContent=i.expectedDelivery;const t=c.querySelector(".mini-track"),tl=c.querySelector(".timeline");c.querySelector(".track-btn").onclick=()=>{t.classList.toggle("hidden");tl.classList.toggle("hidden");activate(t,i.status);tl.innerHTML=FLOW.map(s=>`<p><strong>${s.replaceAll("_"," ")}:</strong> ${i.statusHistory[s]?fmt(i.statusHistory[s]):"-"}</p>`).join("")};const cb=c.querySelector(".cancel-btn");cb.onclick=()=>reqCancel(o.id,i.itemId);const db=c.querySelector(".delete-btn");if(["delivered","cancelled"].includes(i.status)){db.classList.remove("hidden");db.onclick=()=>delDelivered(o.id,i.itemId)}const n=c.querySelector(".cancel-note");if(i.cancelRequest==="pending"){n.textContent="Cancellation pending";n.classList.remove("hidden");cb.disabled=true}else if(i.cancelRequest==="declined"){n.textContent=`Declined: ${i.cancelMessage}`;n.classList.remove("hidden");cb.disabled=true}else if(i.cancelRequest==="accepted"||i.status==="cancelled"){n.textContent="Product cancelled";n.classList.remove("hidden");cb.disabled=true}l.appendChild(c)})}
 
-const defaultProducts = [
-  {
-    id: "p1",
-    name: "ZamGlow Pearl Drop Earrings",
-    desc: "Elegant pearl drop earrings for party and daily wear.",
-    longDesc: "Premium anti-tarnish pearl drop earrings with lightweight comfort and elegant shine.",
-    brand: "ZamGlow ✨",
-    category: "Earrings",
-    highlights: ["Anti-tarnish", "Lightweight", "Premium finish"],
-    price: 499,
-    stock: 40,
-    image: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "p2",
-    name: "ZamGlow Hoop Earrings",
-    desc: "Trendy hoops with glossy finish.",
-    longDesc: "Classic hoop design with smooth lock and skin-safe polish for all-day use.",
-    brand: "ZamGlow ✨",
-    category: "Earrings",
-    highlights: ["Skin safe", "Glossy finish", "Daily wear"],
-    price: 299,
-    stock: 55,
-    image: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=800&q=80",
-  },
-];
-
-function getJSON(key, fallback) {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function setJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-
-function initData() {
-  if (!localStorage.getItem(KEYS.products)) setJSON(KEYS.products, defaultProducts);
-  if (!localStorage.getItem(KEYS.users)) setJSON(KEYS.users, []);
-  if (!localStorage.getItem(KEYS.carts)) setJSON(KEYS.carts, {});
-  if (!localStorage.getItem(KEYS.orders)) setJSON(KEYS.orders, []);
-}
-initData();
-
-const state = {
-  products: getJSON(KEYS.products, []),
-  users: getJSON(KEYS.users, []),
-  carts: getJSON(KEYS.carts, {}),
-  orders: getJSON(KEYS.orders, []),
-  currentUser: getJSON(KEYS.currentUser, null),
-  currentAddress: null,
-};
-
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => document.querySelectorAll(s);
-const pages = { store: $("#storePage"), checkout: $("#checkoutPage"), orders: $("#ordersPage") };
-const FLOW = ["order", "shipped", "out_for_delivery", "delivered"];
-
-function saveState() {
-  setJSON(KEYS.products, state.products);
-  setJSON(KEYS.users, state.users);
-  setJSON(KEYS.carts, state.carts);
-  setJSON(KEYS.orders, state.orders);
-  setJSON(KEYS.currentUser, state.currentUser);
-}
-
-function normalizeOrders() {
-  let changed = false;
-  state.orders.forEach((o) => {
-    o.items.forEach((i) => {
-      if (!i.status) { i.status = "order"; changed = true; }
-      if (!i.cancelRequest) { i.cancelRequest = "none"; changed = true; }
-      if (!i.cancelMessage) { i.cancelMessage = ""; changed = true; }
-    });
-  });
-  if (changed) saveState();
-}
-normalizeOrders();
-
-function userId() { return state.currentUser?.email || "guest"; }
-function userCart() {
-  const id = userId();
-  state.carts[id] = state.carts[id] || [];
-  return state.carts[id];
-}
-
-function cartTotals() {
-  const subtotal = userCart().reduce((sum, item) => {
-    const p = state.products.find((x) => x.id === item.productId);
-    return p ? sum + p.price * item.qty : sum;
-  }, 0);
-  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
-  return { subtotal, delivery, tax: 0, total: subtotal + delivery };
-}
-
-function stockText(stock) {
-  if (stock > 10) return "In Stock";
-  if (stock > 0) return `Only ${stock} left`;
-  return "Out of Stock";
-}
-
-function showPage(name) {
-  Object.values(pages).forEach((p) => p.classList.add("hidden"));
-  pages[name].classList.remove("hidden");
-}
-function ensureAuth() {
-  if (state.currentUser) return true;
-  $("#authSection").classList.remove("hidden");
-  $("#authMsg").textContent = "Please sign in first.";
-  return false;
-}
-function updateAuthUi() {
-  $("#authBtn").textContent = state.currentUser ? `Sign Out (${state.currentUser.name})` : "Sign In";
-}
-
-function renderProducts() {
-  const q = $("#searchInput").value.toLowerCase().trim();
-  const grid = $("#productGrid");
-  grid.innerHTML = "";
-  state.products
-    .filter((p) => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q))
-    .forEach((p) => {
-      const node = $("#productCardTpl").content.firstElementChild.cloneNode(true);
-      node.querySelector(".product-image").src = p.image;
-      node.querySelector(".product-title").textContent = p.name;
-      node.querySelector(".product-desc").textContent = p.desc;
-      node.querySelector(".product-price").textContent = p.price;
-      node.querySelector(".stock-label").textContent = stockText(p.stock);
-      const disabled = p.stock <= 0;
-      node.querySelectorAll("button").forEach((b) => (b.disabled = disabled));
-      node.querySelector(".view-btn").onclick = () => (location.href = `product-detail.html?id=${encodeURIComponent(p.id)}`);
-      node.querySelector(".cart-btn").onclick = () => addToCart(p.id, 1);
-      node.querySelector(".buy-btn").onclick = () => { addToCart(p.id, 1); showCheckout(); };
-      grid.appendChild(node);
-    });
-}
-
-function addToCart(productId, qty) {
-  const p = state.products.find((x) => x.id === productId);
-  if (!p || p.stock < qty) return alert("Out of stock.");
-  const cart = userCart();
-  const ex = cart.find((i) => i.productId === productId);
-  if (ex) ex.qty = Math.min(ex.qty + qty, p.stock);
-  else cart.push({ productId, qty });
-  saveState();
-  renderCartCount();
-  if (!pages.checkout.classList.contains("hidden")) renderCheckout();
-}
-function updateCartItem(productId, qty) {
-  const p = state.products.find((x) => x.id === productId);
-  const item = userCart().find((x) => x.productId === productId);
-  if (!p || !item) return;
-  item.qty = Math.max(1, Math.min(qty, p.stock));
-  saveState();
-  renderCartCount();
-  renderCheckout();
-}
-function removeCartItem(productId) {
-  state.carts[userId()] = userCart().filter((x) => x.productId !== productId);
-  saveState();
-  renderCartCount();
-  renderCheckout();
-}
-function renderCartCount() { $("#cartCount").textContent = userCart().reduce((s, i) => s + i.qty, 0); }
-
-function showCheckout() {
-  if (!ensureAuth()) return;
-  $("#authSection").classList.add("hidden");
-  showPage("checkout");
-  renderCheckout();
-}
-
-function renderCheckout() {
-  const wrap = $("#cartItems");
-  wrap.innerHTML = "";
-  const cart = userCart();
-  if (!cart.length) wrap.innerHTML = "<p>Your cart is empty.</p>";
-  cart.forEach((item) => {
-    const p = state.products.find((x) => x.id === item.productId);
-    if (!p) return;
-    const row = document.createElement("div");
-    row.className = "cart-row";
-    row.innerHTML = `<div><strong>${p.name}</strong><p>₹${p.price} x ${item.qty} = ₹${p.price * item.qty}</p></div>
-    <div class='cart-actions'><button class='btn btn-light m'>-</button><span>${item.qty}</span><button class='btn btn-light p'>+</button><button class='btn btn-light d'>Delete</button></div>`;
-    row.querySelector(".m").onclick = () => updateCartItem(item.productId, item.qty - 1);
-    row.querySelector(".p").onclick = () => updateCartItem(item.productId, item.qty + 1);
-    row.querySelector(".d").onclick = () => removeCartItem(item.productId);
-    wrap.appendChild(row);
-  });
-  const t = cartTotals();
-  $("#cartSubtotal").textContent = t.subtotal;
-  $("#deliveryCharge").textContent = t.delivery;
-  $("#taxCharge").textContent = 0;
-  $("#cartTotal").textContent = t.total;
-}
-
-function activateTracking(container, status) {
-  const idx = FLOW.indexOf(status);
-  container.querySelectorAll(".step").forEach((s, i) => s.classList.toggle("active", i <= idx));
-}
-
-function requestCancellation(orderId, productId) {
-  const order = state.orders.find((o) => o.id === orderId);
-  const item = order?.items.find((i) => i.productId === productId);
-  if (!item || item.cancelRequest !== "none") return;
-  if (["delivered", "cancelled"].includes(item.status)) return alert("Cannot cancel now.");
-  item.cancelRequest = "pending";
-  item.cancelMessage = "Cancellation request sent.";
-  saveState();
-  renderMyOrders();
-}
-
-function renderMyOrders() {
-  if (!ensureAuth()) return;
-  showPage("orders");
-  const list = $("#ordersList");
-  list.innerHTML = "";
-  const rows = [];
-  state.orders.filter((o) => o.userEmail === userId()).slice().reverse().forEach((o) => o.items.forEach((i) => rows.push({ o, i })));
-  if (!rows.length) return (list.innerHTML = "<div class='card'><p>No orders yet.</p></div>");
-
-  rows.forEach(({ o, i }) => {
-    const card = $("#orderCardTpl").content.firstElementChild.cloneNode(true);
-    card.querySelector(".order-id").textContent = `Order ID: ${o.id}`;
-    card.querySelector(".order-item").textContent = i.name;
-    card.querySelector(".order-status").textContent = i.status.replaceAll("_", " ");
-    card.querySelector(".order-qty").textContent = i.qty;
-    card.querySelector(".order-price").textContent = i.price;
-    const tw = card.querySelector(".mini-track");
-    card.querySelector(".track-btn").onclick = () => { tw.classList.toggle("hidden"); activateTracking(tw, i.status); };
-    const cbtn = card.querySelector(".cancel-btn");
-    cbtn.onclick = () => requestCancellation(o.id, i.productId);
-    const note = card.querySelector(".cancel-note");
-    if (i.cancelRequest === "pending") { note.textContent = "Cancellation pending."; note.classList.remove("hidden"); cbtn.disabled = true; }
-    if (i.cancelRequest === "accepted" || i.status === "cancelled") { note.textContent = "Product cancelled."; note.classList.remove("hidden"); cbtn.disabled = true; }
-    if (i.cancelRequest === "declined") { note.textContent = `Declined: ${i.cancelMessage}`; note.classList.remove("hidden"); cbtn.disabled = true; }
-    list.appendChild(card);
-  });
-}
-
-$("#authBtn").onclick = () => {
-  if (state.currentUser) {
-    state.currentUser = null;
-    saveState();
-    updateAuthUi();
-    renderCartCount();
-    return showPage("store");
-  }
-  $("#authSection").classList.toggle("hidden");
-};
-$("#goHome").onclick = () => showPage("store");
-$("#goCheckout").onclick = showCheckout;
-$("#goOrders").onclick = renderMyOrders;
-$("#searchInput").oninput = renderProducts;
-
-$$(".tab").forEach((tab) => (tab.onclick = () => {
-  $$(".tab").forEach((x) => x.classList.remove("active"));
-  tab.classList.add("active");
-  $("#signinForm").classList.toggle("hidden", tab.dataset.tab !== "signin");
-  $("#signupForm").classList.toggle("hidden", tab.dataset.tab !== "signup");
-  $("#authMsg").textContent = "";
-}));
-
-$("#signupForm").onsubmit = (e) => {
-  e.preventDefault();
-  const name = $("#signupName").value.trim();
-  const email = $("#signupEmail").value.trim().toLowerCase();
-  const phone = $("#signupPhone").value.trim();
-  const password = $("#signupPassword").value;
-  if (!name || !email || !phone || !password) return ($("#authMsg").textContent = "All fields required.");
-  if (state.users.some((u) => u.email === email)) return ($("#authMsg").textContent = "Account exists.");
-  state.users.push({ name, email, phone, password });
-  state.currentUser = { name, email, phone };
-  saveState();
-  updateAuthUi();
-  renderCartCount();
-  $("#authSection").classList.add("hidden");
-};
-
-$("#signinForm").onsubmit = (e) => {
-  e.preventDefault();
-  const emailOrUser = $("#signinEmail").value.trim().toLowerCase();
-  const password = $("#signinPassword").value;
-
-  if (emailOrUser === ADMIN_CRED.username && password === ADMIN_CRED.password) {
-    localStorage.setItem(ADMIN_CRED.session, "1");
-    location.href = "admin.html";
-    return;
-  }
-
-  const user = state.users.find((u) => u.email === emailOrUser && u.password === password);
-  if (!user) return ($("#authMsg").textContent = "Invalid email or password.");
-  state.currentUser = { name: user.name, email: user.email, phone: user.phone };
-  saveState();
-  updateAuthUi();
-  renderCartCount();
-  $("#authSection").classList.add("hidden");
-};
-
-$("#addressForm").onsubmit = (e) => {
-  e.preventDefault();
-  state.currentAddress = {
-    name: $("#addrName").value.trim(), phone: $("#addrPhone").value.trim(), line: $("#addrLine").value.trim(),
-    city: $("#addrCity").value.trim(), state: $("#addrState").value.trim(), pincode: $("#addrPincode").value.trim(),
-    instruction: $("#addrInstruction").value.trim(),
-  };
-  const p = $("#addressPreview");
-  p.innerHTML = `<strong>Address Added</strong><p>${state.currentAddress.name} (${state.currentAddress.phone})</p><p>${state.currentAddress.line}, ${state.currentAddress.city}, ${state.currentAddress.state} - ${state.currentAddress.pincode}</p>`;
-  p.classList.remove("hidden");
-  $("#placeOrderBtn").disabled = false;
-};
-
-$("#placeOrderBtn").onclick = () => {
-  if (!ensureAuth()) return;
-  const cart = userCart();
-  if (!cart.length) return alert("Cart empty");
-  if (!state.currentAddress) return alert("Add address first");
-
-  const t = cartTotals();
-  const items = [];
-  for (const c of cart) {
-    const p = state.products.find((x) => x.id === c.productId);
-    if (!p || p.stock < c.qty) return alert(`Stock issue for ${p?.name || c.productId}`);
-    p.stock -= c.qty;
-    items.push({ productId: p.id, name: p.name, qty: c.qty, unitPrice: p.price, price: p.price * c.qty, status: "order", cancelRequest: "none", cancelMessage: "" });
-  }
-
-  state.orders.push({
-    id: `ZG${Date.now()}`,
-    userEmail: userId(), userName: state.currentUser.name, phone: state.currentUser.phone,
-    items, subtotal: t.subtotal, deliveryCharge: t.delivery, tax: 0, total: t.total,
-    address: state.currentAddress, payment: "cod", createdAt: new Date().toISOString(),
-  });
-
-  state.carts[userId()] = [];
-  saveState();
-  renderProducts();
-  renderCartCount();
-  renderMyOrders();
-};
-
-window.addEventListener("storage", () => {
-  state.products = getJSON(KEYS.products, []);
-  state.orders = getJSON(KEYS.orders, []);
-  state.carts = getJSON(KEYS.carts, {});
-  normalizeOrders();
-  renderProducts();
-  renderCartCount();
-});
-
-setInterval(() => {
-  const latestProducts = getJSON(KEYS.products, []);
-  const latestOrders = getJSON(KEYS.orders, []);
-  if (JSON.stringify(latestProducts) !== JSON.stringify(state.products)) { state.products = latestProducts; renderProducts(); }
-  if (JSON.stringify(latestOrders) !== JSON.stringify(state.orders)) {
-    state.orders = latestOrders;
-    normalizeOrders();
-    if (!$("#ordersPage").classList.contains("hidden")) renderMyOrders();
-  }
-}, 1500);
-
-updateAuthUi();
-renderProducts();
-renderCartCount();
-showPage("store");
+$("#authBtn").onclick=()=>{if(state.currentUser){state.currentUser=null;save();authUI();cartCount();$("#authSection").classList.add("hidden");$("#authMsg").textContent="";showPage("store");return;}$("#authSection").classList.toggle("hidden")};
+$("#goHome").onclick=()=>{ $("#authSection").classList.add("hidden"); showPage("store");};
+$("#goCheckout").onclick=showCheckout;$("#goOrders").onclick=renderOrders;$("#searchInput").oninput=renderProducts;
+$$(".tab").forEach(t=>t.onclick=()=>{$$(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");$("#signinForm").classList.toggle("hidden",t.dataset.tab!=="signin");$("#signupForm").classList.toggle("hidden",t.dataset.tab!=="signup");$("#authMsg").textContent=""});
+$("#signupForm").onsubmit=e=>{e.preventDefault();const n=$("#signupName").value.trim(),em=$("#signupEmail").value.trim().toLowerCase(),ph=$("#signupPhone").value.trim(),pw=$("#signupPassword").value;if(!n||!em||!ph||!pw)return $("#authMsg").textContent="All fields required";if(state.users.some(u=>u.email===em))return $("#authMsg").textContent="Account exists";state.users.push({name:n,email:em,phone:ph,password:pw});state.currentUser={name:n,email:em,phone:ph};save();authUI();cartCount();$("#authSection").classList.add("hidden")};
+$("#signinForm").onsubmit=e=>{e.preventDefault();const u=$("#signinEmail").value.trim().toLowerCase(),pw=$("#signinPassword").value;if(u===ADMIN.username&&pw===ADMIN.password){localStorage.setItem(ADMIN.session,"1");location.href="admin.html";return;}const usr=state.users.find(x=>x.email===u&&x.password===pw);if(!usr)return $("#authMsg").textContent="Invalid email or password";state.currentUser={name:usr.name,email:usr.email,phone:usr.phone};save();authUI();cartCount();$("#authSection").classList.add("hidden")};
+$("#addressForm").onsubmit=e=>{e.preventDefault();state.currentAddress={name:$("#addrName").value.trim(),phone:$("#addrPhone").value.trim(),line:$("#addrLine").value.trim(),city:$("#addrCity").value.trim(),state:$("#addrState").value.trim(),pincode:$("#addrPincode").value.trim(),instruction:$("#addrInstruction").value.trim()};$("#addressPreview").innerHTML=`<strong>Address Added</strong><p>${state.currentAddress.name} (${state.currentAddress.phone})</p>`;$("#addressPreview").classList.remove("hidden");$("#placeOrderBtn").disabled=false};
+$("#placeOrderBtn").onclick=()=>{if(!ensureAuth())return;if(!cart().length)return alert("Cart empty");if(!state.currentAddress)return alert("Add address first");const t=money(),created=new Date().toISOString(),expDate=new Date();expDate.setDate(expDate.getDate()+7);const exp=expDate.toDateString();const items=[];for(const c of cart()){const p=state.products.find(x=>x.id===c.productId);if(!p||p.stock<c.qty)return alert(`Stock issue for ${p?.name||c.productId}`);p.stock-=c.qty;items.push({itemId:`ITM${Date.now()}${Math.random().toString(36).slice(2,6)}`,trackingId:`ZGTRK${Date.now()}${Math.random().toString(36).slice(2,5).toUpperCase()}`,productId:p.id,name:p.name,qty:c.qty,unitPrice:p.price,price:p.price*c.qty,status:"order",cancelRequest:"none",cancelMessage:"",statusHistory:{order:created},expectedDelivery:exp});}
+state.orders.push({id:`ZG${Date.now()}`,userEmail:uid(),userName:state.currentUser.name,phone:state.currentUser.phone,items,subtotal:t.sub,deliveryCharge:t.del,tax:0,total:t.total,address:state.currentAddress,payment:"cod",createdAt:created});state.carts[uid()]=[];save();renderProducts();cartCount();renderOrders()};
+window.addEventListener("storage",()=>{state.products=getJSON(KEYS.products,[]);state.orders=getJSON(KEYS.orders,[]);state.carts=getJSON(KEYS.carts,{});normalize();renderProducts();cartCount()});
+setInterval(()=>{const p=getJSON(KEYS.products,[]),o=getJSON(KEYS.orders,[]);if(JSON.stringify(p)!==JSON.stringify(state.products)){state.products=p;renderProducts()}if(JSON.stringify(o)!==JSON.stringify(state.orders)){state.orders=o;normalize();if(!$("#ordersPage").classList.contains("hidden"))renderOrders()}},1500);
+authUI();renderProducts();cartCount();showPage("store");
